@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#14532d">
+  <title>Produksi & Grading HE</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#17211b;background:#f3f6f3}
+    *{box-sizing:border-box} body{margin:0} header{background:#14532d;color:white;padding:18px 16px}
+    header h1{font-size:1.25rem;margin:0 0 4px} header p{margin:0;font-size:.9rem;opacity:.9}
+    main{max-width:900px;margin:auto;padding:14px;display:grid;gap:14px}
+    section{background:#fff;border:1px solid #dce5dd;border-radius:14px;padding:16px;box-shadow:0 2px 8px #15391c0a}
+    h2{font-size:1.05rem;margin:0 0 12px;color:#14532d}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    label{display:block;font-size:.88rem;font-weight:650;margin-bottom:5px}
+    input,select,textarea,button{font:inherit}
+    input,select,textarea{width:100%;border:1px solid #bac8bd;border-radius:9px;padding:10px;background:#fff;min-height:42px}
+    input[type=number]{text-align:right} textarea{min-height:66px;resize:vertical}
+    .field{min-width:0}.wide{grid-column:1/-1}.muted{color:#5e6b61;font-size:.83rem}
+    .cne-row{display:grid;grid-template-columns:1.1fr 1fr auto;gap:8px;align-items:end;margin-bottom:9px}
+    .cne-row button{padding:8px 11px;min-height:42px}
+    button{border:0;border-radius:9px;padding:11px 14px;font-weight:700;cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}.primary{background:#166534;color:white}.secondary{background:#e7efe8;color:#14532d}
+    .danger{background:#fee2e2;color:#991b1b}.actions{display:flex;flex-wrap:wrap;gap:8px}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .metric{background:#f4f8f4;border:1px solid #e0e9e1;border-radius:10px;padding:11px}
+    .metric span{display:block;font-size:.8rem;color:#59685d}.metric strong{display:block;font-size:1.15rem;margin-top:3px}
+    .status{padding:10px 12px;border-radius:9px;background:#eef4ef;font-size:.9rem;line-height:1.4}
+    .ok{color:#166534;font-weight:750}.bad{color:#b91c1c;font-weight:750}
+    .records{display:grid;gap:8px}.record{border:1px solid #dce5dd;border-radius:10px;padding:11px;display:grid;gap:5px}
+    .record-top{display:flex;justify-content:space-between;gap:8px;align-items:start}.record small{color:#5e6b61}
+    .hidden{display:none!important} footer{padding:0 16px 24px;text-align:center;color:#68766b;font-size:.8rem}
+    @media(max-width:560px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.cne-row{grid-template-columns:1fr 1fr}.cne-row button{grid-column:1/-1}.metric-grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Produksi & Grading HE</h1>
+  <p>Pasuruan Hatchery · Data tersimpan di perangkat dan dapat disinkronkan</p>
+</header>
+<main>
+  <div class="status" id="connectionStatus">Memeriksa koneksi…</div>
+  <section>
+    <h2>1. Data Produksi</h2>
+    <div class="grid">
+      <div class="field"><label for="tanggal">Tanggal Produksi *</label><input id="tanggal" type="date" required></div>
+      <div class="field"><label for="kandang">Nomor Kandang *</label><input id="kandang" placeholder="Contoh: 01" required></div>
+      <div class="field"><label for="farm">Nama Farm *</label><input id="farm" placeholder="Nama farm" required></div>
+      <div class="field"><label for="strain">Strain Ayam *</label>
+        <select id="strain" required><option value="">Pilih strain</option><option>Cobb Fast</option><option>Ross Fast</option><option>Ross</option><option>Cobb</option></select>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Penerimaan HE — CNE</h2>
+    <p class="muted">Tekan “Tambah CNE” untuk menambah surat jalan sebanyak yang diperlukan. Setiap CNE harus memiliki nomor dan jumlah butir.</p>
+    <div id="cneList"></div>
+    <button type="button" class="secondary" id="addCne">＋ Tambah CNE</button>
+    <div class="metric-grid" style="margin-top:12px">
+      <div class="metric"><span>Total Penerimaan (butir)</span><strong id="totalPenerimaan">0</strong></div>
+      <div class="metric"><span>Jumlah CNE</span><strong id="cneCount">0</strong></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Rincian Hasil Grading HE</h2>
+    <div class="grid">
+      <div class="field"><label for="dirty">Dirty (butir)</label><input id="dirty" type="number" min="0" step="1" value="0"></div>
+      <div class="field"><label for="crackFarm">Crack Form Farm (butir)</label><input id="crackFarm" type="number" min="0" step="1" value="0"></div>
+      <div class="field"><label for="crackHatchery">Crack Form Hatchery (butir)</label><input id="crackHatchery" type="number" min="0" step="1" value="0"></div>
+      <div class="field"><label for="cull">Cull (butir)</label><input id="cull" type="number" min="0" step="1" value="0"></div>
+      <div class="field"><label for="breakFarm">Break Form Farm (butir)</label><input id="breakFarm" type="number" min="0" step="1" value="0"></div>
+      <div class="field"><label for="breakHatchery">Break Form Hatchery (butir)</label><input id="breakHatchery" type="number" min="0" step="1" value="0"></div>
+      <div class="field"><label for="penjualan">Penjualan Culling (butir)</label><input id="penjualan" type="number" min="0" step="1" value="0"></div>
+    </div>
+    <div class="metric-grid" style="margin-top:14px">
+      <div class="metric"><span>Total Crack</span><strong id="totalCrack">0</strong></div>
+      <div class="metric"><span>Total Break</span><strong id="totalBreak">0</strong></div>
+      <div class="metric"><span>Total Culling</span><strong id="totalCulling">0</strong></div>
+      <div class="metric"><span>HE Cooling Room</span><strong id="coolingRoom">0</strong></div>
+    </div>
+    <p class="muted">Penjualan Culling dicatat terpisah dan tidak dikurangkan lagi dari HE Cooling Room, karena rumus cooling room menggunakan Total Culling.</p>
+  </section>
+
+  <section>
+    <h2>4. Validasi & Simpan</h2>
+    <div id="validation" class="status">Lengkapi data untuk memeriksa validasi.</div>
+    <div class="actions" style="margin-top:12px">
+      <button type="button" class="primary" id="saveBtn">Simpan di Handphone</button>
+      <button type="button" class="secondary" id="syncBtn">Sinkronkan ke Spreadsheet</button>
+      <button type="button" class="secondary" id="exportBtn">Ekspor JSON</button>
+      <button type="button" class="danger" id="resetBtn">Form Baru</button>
+    </div>
+    <p class="muted">Simpan di handphone menyimpan catatan pada perangkat ini. Sinkronisasi memerlukan URL Web App Google Apps Script yang diatur di bagian Konfigurasi.</p>
+  </section>
+
+  <section>
+    <h2>5. Konfigurasi Sinkronisasi</h2>
+    <div class="field">
+      <label for="scriptUrl">URL Web App Google Apps Script (/exec)</label>
+      <input id="scriptUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="actions" style="margin-top:10px">
+      <button type="button" class="secondary" id="saveConfigBtn">Simpan URL</button>
+      <button type="button" class="secondary" id="syncAllBtn">Sinkronkan Semua Data Tertunda</button>
+    </div>
+    <p class="muted">URL disimpan di perangkat. Jangan bagikan URL Web App ke orang yang tidak berwenang.</p>
+  </section>
+
+  <section>
+    <h2>6. Catatan Tersimpan di Perangkat</h2>
+    <div id="records" class="records"><p class="muted">Belum ada catatan.</p></div>
+  </section>
+</main>
+<footer>Versi awal · Pastikan data sudah benar sebelum sinkronisasi.</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = 'heProductionRecords_v1';
+  const CONFIG_KEY = 'heProductionConfig_v1';
+  let cneSequence = 0;
+  const intVal = id => Math.max(0, Math.floor(Number($(id).value || 0)));
+  const fmt = n => Number(n || 0).toLocaleString('id-ID');
+  const safe = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const today = new Date();
+  $('tanggal').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  function getRecords(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return []} }
+  function setRecords(v){ localStorage.setItem(STORAGE_KEY,JSON.stringify(v)); renderRecords(); updateConnection(); }
+  function getConfig(){return JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}')}
+  function readCnes(){
+    return [...document.querySelectorAll('.cne-row')].map(row => ({
+      nomor: row.querySelector('.cne-number').value.trim(),
+      butir: Math.max(0,Math.floor(Number(row.querySelector('.cne-amount').value||0)))
+    }));
+  }
+  function addCne(nomor='',butir=''){
+    cneSequence++;
+    const row=document.createElement('div'); row.className='cne-row'; row.dataset.seq=cneSequence;
+    row.innerHTML=`<div><label>Nomor CNE</label><input class="cne-number" placeholder="Nomor surat jalan" value="${safe(nomor)}"></div>
+      <div><label>Jumlah HE (butir)</label><input class="cne-amount" type="number" min="0" step="1" placeholder="0" value="${safe(butir)}"></div>
+      <button type="button" class="danger remove-cne" aria-label="Hapus CNE">Hapus</button>`;
+    row.querySelectorAll('input').forEach(el=>el.addEventListener('input',calculate));
+    row.querySelector('.remove-cne').addEventListener('click',()=>{row.remove();calculate()});
+    $('cneList').appendChild(row); calculate();
+  }
+  function calculate(){
+    const cnes=readCnes();
+    const totalPenerimaan=cnes.reduce((s,x)=>s+x.butir,0);
+    const totalCrack=intVal('crackFarm')+intVal('crackHatchery');
+    const totalBreak=intVal('breakFarm')+intVal('breakHatchery');
+    const totalCulling=intVal('dirty')+totalCrack+intVal('cull')+totalBreak;
+    const coolingRoom=totalPenerimaan-totalCulling;
+    const validation=totalPenerimaan-totalCulling-coolingRoom;
+    $('totalPenerimaan').textContent=fmt(totalPenerimaan);
+    $('cneCount').textContent=fmt(cnes.length);
+    $('totalCrack').textContent=fmt(totalCrack);
+    $('totalBreak').textContent=fmt(totalBreak);
+    $('totalCulling').textContent=fmt(totalCulling);
+    $('coolingRoom').textContent=fmt(coolingRoom);
+    const valid=$('validation');
+    if(coolingRoom<0){valid.innerHTML='<span class="bad">PERIKSA:</span> Total Culling lebih besar daripada Total Penerimaan. HE Cooling Room menjadi negatif.'}
+    else if(validation===0){valid.innerHTML='<span class="ok">VALID — selisih 0 butir.</span> Total Penerimaan − Total Culling − HE Cooling Room = 0.'}
+    else{valid.innerHTML='<span class="bad">PERIKSA:</span> Perhitungan belum seimbang.'}
+    return {cnes,totalPenerimaan,totalCrack,totalBreak,totalCulling,coolingRoom,validation};
+  }
+  function validateForm(){
+    const required=[['tanggal','Tanggal Produksi'],['kandang','Nomor Kandang'],['farm','Nama Farm'],['strain','Strain Ayam']];
+    for(const [id,label] of required){if(!$(id).value.trim()){alert(`${label} wajib diisi.`);$(id).focus();return false}}
+    const cnes=readCnes();
+    if(!cnes.length){alert('Tambahkan minimal satu CNE.');return false}
+    if(cnes.some(c=>!c.nomor)){alert('Semua nomor CNE harus diisi.');return false}
+    if(cnes.some(c=>!Number.isInteger(c.butir)||c.butir<0)){alert('Jumlah HE setiap CNE harus berupa bilangan bulat tidak negatif.');return false}
+    for(const id of ['dirty','crackFarm','crackHatchery','cull','breakFarm','breakHatchery','penjualan']){
+      if(!Number.isInteger(Number($(id).value||0))||Number($(id).value||0)<0){alert('Jumlah grading dan penjualan harus bilangan bulat tidak negatif.');$(id).focus();return false}
+    }
+    const calc=calculate();
+    if(calc.coolingRoom<0){alert('Tidak dapat menyimpan: Total Culling melebihi Total Penerimaan.');return false}
+    return true;
+  }
+  function makeRecord(){
+    const c=calculate();
+    return {
+      id: (crypto.randomUUID ? crypto.randomUUID() : `HE-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+      createdAt:new Date().toISOString(),
+      tanggalProduksi:$('tanggal').value,
+      nomorKandang:$('kandang').value.trim(),
+      namaFarm:$('farm').value.trim(),
+      strainAyam:$('strain').value,
+      rincianCNE:c.cnes,
+      jumlahCNE:c.cnes.length,
+      totalPenerimaan:c.totalPenerimaan,
+      dirty:intVal('dirty'),
+      crackFormFarm:intVal('crackFarm'),
+      crackFormHatchery:intVal('crackHatchery'),
+      totalCrack:c.totalCrack,
+      cull:intVal('cull'),
+      breakFormFarm:intVal('breakFarm'),
+      breakFormHatchery:intVal('breakHatchery'),
+      totalBreak:c.totalBreak,
+      totalCulling:c.totalCulling,
+      penjualanCulling:intVal('penjualan'),
+      heCoolingRoom:c.coolingRoom,
+      validasi:c.validation,
+      statusValidasi:c.validation===0 && c.coolingRoom>=0 ? 'VALID':'PERIKSA',
+      syncStatus:'PENDING',
+      syncedAt:''
+    };
+  }
+  function renderRecords(){
+    const list=$('records'),records=getRecords();
+    if(!records.length){list.innerHTML='<p class="muted">Belum ada catatan.</p>';return}
+    list.innerHTML='';
+    records.slice().reverse().forEach(r=>{
+      const el=document.createElement('div');el.className='record';
+      const cne=(r.rincianCNE||[]).map(x=>`${x.nomor}: ${fmt(x.butir)}`).join(' · ');
+      el.innerHTML=`<div class="record-top"><strong>${safe(r.tanggalProduksi)} · Kandang ${safe(r.nomorKandang)}</strong><span class="${r.syncStatus==='SYNCED'?'ok':'bad'}">${safe(r.syncStatus||'PENDING')}</span></div>
+        <div>${safe(r.namaFarm)} · ${safe(r.strainAyam)}</div><small>CNE: ${safe(cne)}</small>
+        <small>Penerimaan ${fmt(r.totalPenerimaan)} · Culling ${fmt(r.totalCulling)} · Cooling Room ${fmt(r.heCoolingRoom)} · Validasi ${fmt(r.validasi)}</small>
+        <div class="actions"><button class="secondary edit-record" type="button">Muat ke Form</button><button class="danger delete-record" type="button">Hapus</button></div>`;
+      el.querySelector('.delete-record').addEventListener('click',()=>{
+        if(confirm('Hapus catatan ini dari perangkat? Jika sudah tersinkron, data di Spreadsheet tidak ikut terhapus.')){
+          setRecords(getRecords().filter(x=>x.id!==r.id));
+        }
+      });
+      el.querySelector('.edit-record').addEventListener('click',()=>loadRecord(r));
+      list.appendChild(el);
+    });
+  }
+  function loadRecord(r){
+    $('tanggal').value=r.tanggalProduksi||'';$('kandang').value=r.nomorKandang||'';$('farm').value=r.namaFarm||'';$('strain').value=r.strainAyam||'';
+    $('cneList').innerHTML='';cneSequence=0;(r.rincianCNE||[]).forEach(x=>addCne(x.nomor,x.butir));if(!(r.rincianCNE||[]).length)addCne();
+    $('dirty').value=r.dirty||0;$('crackFarm').value=r.crackFormFarm||0;$('crackHatchery').value=r.crackFormHatchery||0;
+    $('cull').value=r.cull||0;$('breakFarm').value=r.breakFormFarm||0;$('breakHatchery').value=r.breakFormHatchery||0;$('penjualan').value=r.penjualanCulling||0;
+    calculate();window.scrollTo({top:0,behavior:'smooth'});
+  }
+  async function sendRecord(record){
+    const url=$('scriptUrl').value.trim()||getConfig().scriptUrl;
+    if(!url){alert('Masukkan URL Web App Google Apps Script pada bagian Konfigurasi.');return false}
+    try{
+      // Apps Script web app accepts a simple POST. no-cors avoids preflight; response cannot be read,
+      // so the script's idempotent ID is used and a subsequent server check is recommended.
+      await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'upsert',record})});
+      return true;
+    }catch(e){console.error(e);return false}
+  }
+  async function syncPending(silent=false){
+    const url=$('scriptUrl').value.trim()||getConfig().scriptUrl;
+    if(!url){if(!silent) alert('Masukkan URL Web App Google Apps Script (/exec) terlebih dahulu.');return}
+    $('syncBtn').disabled=true;$('syncAllBtn').disabled=true;
+    let records=getRecords(),sent=0,failed=0;
+    for(let i=0;i<records.length;i++){
+      if(records[i].syncStatus==='SYNCED')continue;
+      const ok=await sendRecord(records[i]);
+      if(ok){records[i].syncStatus='SENT_UNCONFIRMED';records[i].syncedAt=new Date().toISOString();sent++}
+      else failed++;
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(records));
+    }
+    setRecords(records);
+    $('syncBtn').disabled=false;$('syncAllBtn').disabled=false;
+    if(!silent) alert(`Proses pengiriman selesai. Dikirim: ${sent}. Gagal mengirim: ${failed}.\n\nKarena browser membatasi pembacaan balasan lintas situs, status SENT_UNCONFIRMED berarti permintaan sudah dikirim tetapi belum diverifikasi dari server. Periksa Google Spreadsheet sebelum mengirim ulang.`);
+  }
+  function resetForm(){
+    if(!confirm('Kosongkan form untuk pencatatan baru?'))return;
+    $('kandang').value='';$('farm').value='';$('strain').value='';$('cneList').innerHTML='';cneSequence=0;addCne();
+    ['dirty','crackFarm','crackHatchery','cull','breakFarm','breakHatchery','penjualan'].forEach(id=>$(id).value=0);
+    calculate();
+  }
+  function updateConnection(){
+    const pending=getRecords().filter(r=>r.syncStatus!=='SYNCED').length;
+    $('connectionStatus').innerHTML=`Status internet: <strong>${navigator.onLine?'Online':'Offline'}</strong> · Catatan di perangkat: <strong>${getRecords().length}</strong> · Belum terverifikasi sinkron: <strong>${pending}</strong>.`;
+  }
+  $('addCne').addEventListener('click',()=>addCne());
+  ['dirty','crackFarm','crackHatchery','cull','breakFarm','breakHatchery','penjualan'].forEach(id=>$(id).addEventListener('input',calculate));
+  $('saveBtn').addEventListener('click',()=>{
+    if(!validateForm())return;
+    const record=makeRecord();const records=getRecords();
+    if(records.some(r=>r.id===record.id)){alert('ID duplikat.');return}
+    records.push(record);setRecords(records);alert('Data tersimpan di perangkat ini. Tekan Sinkronkan ke Spreadsheet saat siap.');
+  });
+  $('syncBtn').addEventListener('click',async()=>{
+    if(!validateForm())return;
+    const record=makeRecord();
+    const records=getRecords();
+    // Save locally first, then attempt sync. If it is a new record, it remains queued locally.
+    if(!records.some(r=>r.id===record.id))records.push(record);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(records));renderRecords();
+    await syncPending();
+  });
+  $('saveConfigBtn').addEventListener('click',()=>{
+    const url=$('scriptUrl').value.trim();
+    if(url && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(url)){alert('URL sebaiknya berupa URL Web App Apps Script yang berakhir dengan /exec.');return}
+    localStorage.setItem(CONFIG_KEY,JSON.stringify({scriptUrl:url}));alert('URL disimpan pada perangkat ini.');
+  });
+  $('syncAllBtn').addEventListener('click',syncPending);
+  $('resetBtn').addEventListener('click',resetForm);
+  $('exportBtn').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(getRecords(),null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rekap-produksi-grading-he.json';a.click();URL.revokeObjectURL(a.href);
+  });
+  window.addEventListener('online',()=>{updateConnection(); const cfg=getConfig(); if(cfg.scriptUrl && getRecords().some(r=>r.syncStatus!=='SYNCED')) syncPending(true);});
+  window.addEventListener('offline',updateConnection);
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.error));
+  $('cneList').innerHTML='';addCne();const cfg=getConfig();$('scriptUrl').value=cfg.scriptUrl||'';calculate();renderRecords();updateConnection();
+})();
+</script>
+</body>
+</html>
